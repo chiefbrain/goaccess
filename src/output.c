@@ -64,9 +64,9 @@
 #include "appjs.h"
 
 static void hits_visitors_plot (FILE * fp, const GHTMLPlot plot, int sp);
-static void hits_bw_plot (FILE * fp, const GHTMLPlot plot, int sp);
-static void hits_bw_plot_out (FILE * fp, const GHTMLPlot plot, int sp);
-static void hits_bw_plot_in (FILE * fp, const GHTMLPlot plot, int sp);
+static void hits_bw_plot_wrapper (FILE * fp, const GHTMLPlot plot, int sp);
+static void hits_bw_plot_wrapper_out (FILE * fp, const GHTMLPlot plot, int sp);
+static void hits_bw_plot_wrapper_in (FILE * fp, const GHTMLPlot plot, int sp);
 
 static void print_metrics (FILE * fp, const GHTML * def, int sp);
 static void print_host_metrics (FILE * fp, const GHTML * def, int sp);
@@ -75,36 +75,36 @@ static void print_host_metrics (FILE * fp, const GHTML * def, int sp);
 static GHTML htmldef[] = {
   {VISITORS       , 1, print_metrics, {
     {CHART_AREASPLINE, hits_visitors_plot, 1, 1} ,
-    {CHART_AREASPLINE, hits_bw_plot, 1, 1} ,
-	{CHART_AREASPLINE, hits_bw_plot_out, 1, 1} ,
-	{CHART_AREASPLINE, hits_bw_plot_in, 1, 1} ,
+    {CHART_AREASPLINE, hits_bw_plot_wrapper, 1, 1} ,
+	{CHART_AREASPLINE, hits_bw_plot_wrapper_out, 1, 1} ,
+	{CHART_AREASPLINE, hits_bw_plot_wrapper_in, 1, 1} ,
   }},
   {REQUESTS        , 1, print_metrics } ,
   {REQUESTS_STATIC , 1, print_metrics } ,
   {NOT_FOUND       , 1, print_metrics } ,
   {HOSTS           , 1, print_host_metrics, {
     {CHART_VBAR, hits_visitors_plot, 0, 0},
-    {CHART_VBAR, hits_bw_plot, 0, 0},
-	{CHART_VBAR, hits_bw_plot_out, 0, 0},
-	{CHART_VBAR, hits_bw_plot_in, 0, 0},
+    {CHART_VBAR, hits_bw_plot_wrapper, 0, 0},
+	{CHART_VBAR, hits_bw_plot_wrapper_out, 0, 0},
+	{CHART_VBAR, hits_bw_plot_wrapper_in, 0, 0},
   }},
   {OS              , 1, print_metrics, {
     {CHART_VBAR, hits_visitors_plot, 0, 1},
-    {CHART_VBAR, hits_bw_plot, 0, 1},
-	{CHART_VBAR, hits_bw_plot_out, 0, 1},
-	{CHART_VBAR, hits_bw_plot_in, 0, 1},
+    {CHART_VBAR, hits_bw_plot_wrapper, 0, 1},
+	{CHART_VBAR, hits_bw_plot_wrapper_out, 0, 1},
+	{CHART_VBAR, hits_bw_plot_wrapper_in, 0, 1},
   }},
   {BROWSERS        , 1, print_metrics, {
     {CHART_VBAR, hits_visitors_plot, 0, 1},
-    {CHART_VBAR, hits_bw_plot, 0, 1},
-	{CHART_VBAR, hits_bw_plot_out, 0, 1},
-	{CHART_VBAR, hits_bw_plot_in, 0, 1},
+    {CHART_VBAR, hits_bw_plot_wrapper, 0, 1},
+	{CHART_VBAR, hits_bw_plot_wrapper_out, 0, 1},
+	{CHART_VBAR, hits_bw_plot_wrapper_in, 0, 1},
   }},
   {VISIT_TIMES     , 1, print_metrics, {
     {CHART_AREASPLINE, hits_visitors_plot, 0, 1},
-    {CHART_AREASPLINE, hits_bw_plot, 0, 1},
-	{CHART_AREASPLINE, hits_bw_plot_out, 0, 1},
-	{CHART_AREASPLINE, hits_bw_plot_in, 0, 1},
+    {CHART_AREASPLINE, hits_bw_plot_wrapper, 0, 1},
+	{CHART_AREASPLINE, hits_bw_plot_wrapper_out, 0, 1},
+	{CHART_AREASPLINE, hits_bw_plot_wrapper_in, 0, 1},
   }},
   {VIRTUAL_HOSTS   , 1, print_metrics } ,
   {REFERRERS       , 1, print_metrics } ,
@@ -113,16 +113,16 @@ static GHTML htmldef[] = {
 #ifdef HAVE_LIBGEOIP
   {GEO_LOCATION    , 1, print_metrics, {
     {CHART_VBAR, hits_visitors_plot, 0, 1},
-    {CHART_VBAR, hits_bw_plot, 0, 1},
-	{CHART_VBAR, hits_bw_plot_out, 0, 1},
-	{CHART_VBAR, hits_bw_plot_in, 0, 1},
+    {CHART_VBAR, hits_bw_plot_wrapper, 0, 1},
+	{CHART_VBAR, hits_bw_plot_wrapper_out, 0, 1},
+	{CHART_VBAR, hits_bw_plot_wrapper_in, 0, 1},
   }},
 #endif
   {STATUS_CODES    , 1, print_metrics, {
     {CHART_VBAR, hits_visitors_plot, 0, 1},
-    {CHART_VBAR, hits_bw_plot, 0, 1},
-	{CHART_VBAR, hits_bw_plot_out, 0, 1},
-	{CHART_VBAR, hits_bw_plot_in, 0, 1},
+    {CHART_VBAR, hits_bw_plot_wrapper, 0, 1},
+	{CHART_VBAR, hits_bw_plot_wrapper_out, 0, 1},
+	{CHART_VBAR, hits_bw_plot_wrapper_in, 0, 1},
   }},
 };
 /* *INDENT-ON* */
@@ -370,12 +370,24 @@ hits_visitors_plot (FILE * fp, const GHTMLPlot plot, int sp)
 
 /* Output C3.js bandwidth plot definitions. */
 static void
-hits_bw_plot (FILE * fp, const GHTMLPlot plot, int sp)
+hits_bw_plot (FILE * fp, const GHTMLPlot plot, int sp, int bw_type)
 {
+  const char* t_label;
+
+  if ( bw_type == MTRC_BW && conf.bandwidth ) {
+	  t_label = "Bandwidth";
+  } else if ( bw_type == MTRC_BW_OUT && conf.bandwidth_out ) {
+	  t_label = "Bandwidth outbound";
+  } else if (bw_type == MTRC_BW_IN && conf.bandwidth_in ) {
+	  t_label = "Bandwidth inbound";
+  }
+  else
+	  return;
+
   /* *INDENT-OFF* */
   GChart chart[] = {
     {"y0", (GChartDef[]) {
-      {"key", "bytes"}, {"label", "Bandwidth"}, {"format", "bytes"}, ChartDefStopper
+      {"key", "bytes"}, {"label", t_label}, {"format", "bytes"}, ChartDefStopper
     }},
   };
   /* *INDENT-ON* */
@@ -385,10 +397,7 @@ hits_bw_plot (FILE * fp, const GHTMLPlot plot, int sp)
   if (conf.json_pretty_print)
     isp = sp + 1, iisp = sp + 2;
 
-  if (!conf.bandwidth)
-    return;
-
-  fpskeysval (fp, "label", "Bandwidth", isp, 0);
+  fpskeysval (fp, "label", t_label, isp, 0);
   fpskeysval (fp, "className", "bandwidth", isp, 0);
   fpskeysval (fp, "chartType", chart2str (plot.chart_type), isp, 0);
   fpskeyival (fp, "chartReverse", plot.chart_reverse, isp, 0);
@@ -402,72 +411,25 @@ hits_bw_plot (FILE * fp, const GHTMLPlot plot, int sp)
   fpclose_obj (fp, isp, 1);
 }
 
-/* Output C3.js outbound bandwidth plot definitions. */
+/* Wrapper C3.js bandwidth plot definitions. */
 static void
-hits_bw_plot_out (FILE * fp, const GHTMLPlot plot, int sp)
+hits_bw_plot_wrapper (FILE * fp, const GHTMLPlot plot, int sp)
 {
-  /* *INDENT-OFF* */
-  GChart chart[] = {
-    {"y0", (GChartDef[]) {
-      {"key", "bytes"}, {"label", "Bandwidth outbound"}, {"format", "bytes"}, ChartDefStopper
-    }},
-  };
-  /* *INDENT-ON* */
-
-  int isp = 0, iisp = 0;
-  /* use tabs to prettify output */
-  if (conf.json_pretty_print)
-    isp = sp + 1, iisp = sp + 2;
-
-  if (!conf.bandwidth_out)
-    return;
-
-  fpskeysval (fp, "label", "Bandwidth outbound", isp, 0);
-  fpskeysval (fp, "className", "bandwidth", isp, 0);
-  fpskeysval (fp, "chartType", chart2str (plot.chart_type), isp, 0);
-  fpskeyival (fp, "chartReverse", plot.chart_reverse, isp, 0);
-  fpskeyival (fp, "redrawOnExpand", plot.redraw_expand, isp, 0);
-
-  /* D3.js data */
-  fpopen_obj_attr (fp, "d3", isp);
-  /* print chart definitions */
-  print_d3_chart_def (fp, chart, ARRAY_SIZE (chart), iisp);
-  /* close D3 */
-  fpclose_obj (fp, isp, 1);
+	hits_bw_plot(fp, plot, sp, MTRC_BW);
 }
 
-/* Output C3.js inbound bandwidth plot definitions. */
+/* Wrapper C3.js outbound bandwidth plot definitions. */
 static void
-hits_bw_plot_in (FILE * fp, const GHTMLPlot plot, int sp)
+hits_bw_plot_wrapper_out (FILE * fp, const GHTMLPlot plot, int sp)
 {
-  /* *INDENT-OFF* */
-  GChart chart[] = {
-    {"y0", (GChartDef[]) {
-      {"key", "bytes"}, {"label", "Bandwidth inbound"}, {"format", "bytes"}, ChartDefStopper
-    }},
-  };
-  /* *INDENT-ON* */
+	hits_bw_plot(fp, plot, sp, MTRC_BW_OUT);
+}
 
-  int isp = 0, iisp = 0;
-  /* use tabs to prettify output */
-  if (conf.json_pretty_print)
-    isp = sp + 1, iisp = sp + 2;
-
-  if (!conf.bandwidth_in)
-    return;
-
-  fpskeysval (fp, "label", "Bandwidth inbound", isp, 0);
-  fpskeysval (fp, "className", "bandwidth", isp, 0);
-  fpskeysval (fp, "chartType", chart2str (plot.chart_type), isp, 0);
-  fpskeyival (fp, "chartReverse", plot.chart_reverse, isp, 0);
-  fpskeyival (fp, "redrawOnExpand", plot.redraw_expand, isp, 0);
-
-  /* D3.js data */
-  fpopen_obj_attr (fp, "d3", isp);
-  /* print chart definitions */
-  print_d3_chart_def (fp, chart, ARRAY_SIZE (chart), iisp);
-  /* close D3 */
-  fpclose_obj (fp, isp, 1);
+/* Wrapper C3.js inbound bandwidth plot definitions. */
+static void
+hits_bw_plot_wrapper_in (FILE * fp, const GHTMLPlot plot, int sp)
+{
+	hits_bw_plot(fp, plot, sp, MTRC_BW_IN);
 }
 
 /* Output JSON data definitions. */
@@ -692,39 +654,27 @@ print_def_overall_log_size (FILE * fp, int sp)
 
 /* Output JSON overall bandwidth definition block. */
 static void
-print_def_overall_bandwidth (FILE * fp, int sp)
+print_def_overall_bandwidth (FILE * fp, int sp, int bw_type)
 {
-  GDefMetric def = {
-    .lbl = T_BW,
-    .vtype = "bytes",
-  };
-  fpopen_obj_attr (fp, OVERALL_BANDWIDTH, sp);
-  print_def_metric (fp, def, sp);
-  fpclose_obj (fp, sp, 1);
-}
+  const char* t_lbl;
+  const char* t_key;
 
-/* Output JSON overall outbound bandwidth with headers definition block. */
-static void
-print_def_overall_bandwidth_out (FILE * fp, int sp)
-{
-  GDefMetric def = {
-    .lbl = T_BW_OUT,
-    .vtype = "bytes",
-  };
-  fpopen_obj_attr (fp, OVERALL_BANDWIDTH_OUT, sp);
-  print_def_metric (fp, def, sp);
-  fpclose_obj (fp, sp, 1);
-}
+  if(bw_type == MTRC_BW_OUT) {
+	t_lbl = T_BW_OUT;
+    t_key = OVERALL_BANDWIDTH_OUT;
+  } else if (bw_type == MTRC_BW_IN) {
+	t_lbl = T_BW_IN;
+	t_key = OVERALL_BANDWIDTH_IN;
+  } else {
+	t_lbl = T_BW;
+	t_key = OVERALL_BANDWIDTH;
+  }
 
-/* Output JSON overall inbound bandwidth with headers definition block. */
-static void
-print_def_overall_bandwidth_in (FILE * fp, int sp)
-{
   GDefMetric def = {
-    .lbl = T_BW_IN,
+    .lbl = t_lbl,
     .vtype = "bytes",
   };
-  fpopen_obj_attr (fp, OVERALL_BANDWIDTH_IN, sp);
+  fpopen_obj_attr (fp, t_key, sp);
   print_def_metric (fp, def, sp);
   fpclose_obj (fp, sp, 1);
 }
@@ -1130,9 +1080,9 @@ print_def_summary (FILE * fp, int sp)
   print_def_overall_notfound (fp, iisp);
   print_def_overall_static_files (fp, iisp);
   print_def_overall_log_size (fp, iisp);
-  print_def_overall_bandwidth (fp, iisp);
-  print_def_overall_bandwidth_out (fp, iisp);
-  print_def_overall_bandwidth_in (fp, iisp);
+  print_def_overall_bandwidth (fp, iisp, MTRC_BW);
+  print_def_overall_bandwidth (fp, iisp, MTRC_BW_OUT);
+  print_def_overall_bandwidth (fp, iisp, MTRC_BW_IN);
 
   /* close metrics block */
   fpclose_obj (fp, isp, 1);

@@ -203,82 +203,87 @@ cmp_raw_str_desc (const void *a, const void *b)
   return strcmp (ib->value.svalue, ia->value.svalue);
 }
 
-/* Sort 'bandwidth' metric descending */
+/* Sort 'bandwidth' metric */
 static int
-cmp_bw_desc (const void *a, const void *b)
+cmp_bw (const void *a, const void *b, int bw_type, bool asc)
 {
   const GHolderItem *ia = a;
   const GHolderItem *ib = b;
 
-  uint64_t va = ia->metrics->bw.nbw;
-  uint64_t vb = ib->metrics->bw.nbw;
+  uint64_t va;
+  uint64_t vb;
 
-  return (va < vb) - (va > vb);
+
+  if( bw_type == MTRC_BW_OUT ) {
+	va = ia->metrics->bw_out.nbw;
+	vb = ib->metrics->bw_out.nbw;
+  } else if( bw_type == MTRC_BW_IN ) {
+    va = ia->metrics->bw_out.nbw;
+    vb = ib->metrics->bw_out.nbw;
+  } else {
+    va = ia->metrics->bw.nbw;
+    vb = ib->metrics->bw.nbw;
+  }
+
+  if(asc)
+	return (va > vb) - (va < vb);
+  else
+    return (va < vb) - (va > vb);
+}
+
+static int
+cmp_bw_desc (const void *a, const void *b, int bw_type)
+{
+  return cmp_bw(a, b, bw_type, FALSE);
 }
 
 /* Sort 'bandwidth' metric ascending */
 static int
-cmp_bw_asc (const void *a, const void *b)
+cmp_bw_asc (const void *a, const void *b, int bw_type)
 {
-  const GHolderItem *ia = a;
-  const GHolderItem *ib = b;
+  return cmp_bw(a, b, bw_type, TRUE);
+}
 
-  uint64_t va = ia->metrics->bw.nbw;
-  uint64_t vb = ib->metrics->bw.nbw;
+/* Sort 'bandwidth' metric descending */
+static int
+cmp_bw_desc_wrapper (const void *a, const void *b)
+{
+  return cmp_bw_desc( a, b, MTRC_BW);
+}
 
-  return (va > vb) - (va < vb);
+/* Sort 'bandwidth' metric ascending */
+static int
+cmp_bw_asc_wrapper (const void *a, const void *b)
+{
+  return cmp_bw_asc( a, b, MTRC_BW);
 }
 
 /* Sort outbound 'bandwidth' metric descending */
 static int
-cmp_bw_desc_out (const void *a, const void *b)
+cmp_bw_desc_wrapper_out (const void *a, const void *b)
 {
-  const GHolderItem *ia = a;
-  const GHolderItem *ib = b;
-
-  uint64_t va = ia->metrics->bw_out.nbw;
-  uint64_t vb = ib->metrics->bw_out.nbw;
-
-  return (va < vb) - (va > vb);
+  return cmp_bw_desc( a, b, MTRC_BW_OUT);
 }
 
 /* Sort outbound 'bandwidth' metric ascending */
 static int
-cmp_bw_asc_out (const void *a, const void *b)
+cmp_bw_asc_wrapper_out (const void *a, const void *b)
 {
-  const GHolderItem *ia = a;
-  const GHolderItem *ib = b;
-
-  uint64_t va = ia->metrics->bw_out.nbw;
-  uint64_t vb = ib->metrics->bw_out.nbw;
-
-  return (va > vb) - (va < vb);
+  return cmp_bw_asc( a, b, MTRC_BW_OUT);
 }
 
 /* Sort inbound 'bandwidth' metric descending */
 static int
-cmp_bw_desc_in (const void *a, const void *b)
+cmp_bw_desc_wrapper_in (const void *a, const void *b)
 {
-  const GHolderItem *ia = a;
-  const GHolderItem *ib = b;
-
-  uint64_t va = ia->metrics->bw_in.nbw;
-  uint64_t vb = ib->metrics->bw_in.nbw;
-
-  return (va < vb) - (va > vb);
+  return cmp_bw_desc( a, b, MTRC_BW_IN);
 }
 
 /* Sort inbound 'bandwidth' metric ascending */
 static int
-cmp_bw_asc_in (const void *a, const void *b)
+cmp_bw_asc_wrapper_in (const void *a, const void *b)
 {
-  const GHolderItem *ia = a;
-  const GHolderItem *ib = b;
-
-  uint64_t va = ia->metrics->bw_in.nbw;
-  uint64_t vb = ib->metrics->bw_in.nbw;
-
-  return (va > vb) - (va < vb);
+  return cmp_bw_asc( a, b, MTRC_BW_IN);
 }
 
 /* Sort 'avgts' metric descending */
@@ -556,21 +561,21 @@ sort_holder_items (GHolderItem * items, int size, GSort sort)
     break;
   case SORT_BY_BW:
     if (sort.sort == SORT_DESC)
-      qsort (items, size, sizeof (GHolderItem), cmp_bw_desc);
+      qsort (items, size, sizeof (GHolderItem), cmp_bw_desc_wrapper);
     else
-      qsort (items, size, sizeof (GHolderItem), cmp_bw_asc);
+      qsort (items, size, sizeof (GHolderItem), cmp_bw_asc_wrapper);
     break;
   case SORT_BY_BW_OUT:
     if (sort.sort == SORT_DESC)
-      qsort (items, size, sizeof (GHolderItem), cmp_bw_desc_out);
+      qsort (items, size, sizeof (GHolderItem), cmp_bw_desc_wrapper_out);
     else
-      qsort (items, size, sizeof (GHolderItem), cmp_bw_asc_out);
+      qsort (items, size, sizeof (GHolderItem), cmp_bw_asc_wrapper_out);
     break;
   case SORT_BY_BW_IN:
     if (sort.sort == SORT_DESC)
-      qsort (items, size, sizeof (GHolderItem), cmp_bw_desc_in);
+      qsort (items, size, sizeof (GHolderItem), cmp_bw_desc_wrapper_in);
     else
-      qsort (items, size, sizeof (GHolderItem), cmp_bw_asc_in);
+      qsort (items, size, sizeof (GHolderItem), cmp_bw_asc_wrapper_in);
     break;
   case SORT_BY_AVGTS:
     if (sort.sort == SORT_DESC)
