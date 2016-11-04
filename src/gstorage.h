@@ -46,6 +46,8 @@ typedef enum GSMetric_
   MTRC_HITS,
   MTRC_VISITORS,
   MTRC_BW,
+  MTRC_BW_OUT,
+  MTRC_BW_IN,
   MTRC_CUMTS,
   MTRC_MAXTS,
   MTRC_METHODS,

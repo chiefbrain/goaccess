@@ -536,6 +536,24 @@ get_str_bandwidth (GLog * glog)
   return filesize_str ((float) glog->resp_size);
 }
 
+/* Get the outbound bandwidth in a human readable format.
+ *
+ * On success, the outbound bandwidth as a string is returned. */
+static char *
+get_str_bandwidth_out (GLog * glog)
+{
+  return filesize_str ((float) glog->resp_size_header);
+}
+
+/* Get the inbound bandwidth in a human readable format.
+ *
+ * On success, the inboundbandwidth as a string is returned. */
+static char *
+get_str_bandwidth_in (GLog * glog)
+{
+  return filesize_str ((float) glog->req_size_header);
+}
+
 /* Iterate over the visitors module and sort date in an ascending
  * order.
  *
@@ -672,6 +690,8 @@ display_general (WINDOW * win, GLog * glog, GHolder * h)
     {T_EXCLUDE_IP , get_str_excluded_ips (glog)    , colorlbl , colorval , 0} ,
     {T_UNIQUE404  , get_str_notfound_reqs ()       , colorlbl , colorval , 0} ,
     {T_BW         , get_str_bandwidth (glog)       , colorlbl , colorval , 0} ,
+	{T_BW_OUT     , get_str_bandwidth_out (glog)   , colorlbl , colorval , 0} ,
+	{T_BW_IN      , get_str_bandwidth_in (glog)    , colorlbl , colorval , 0} ,
     {T_LOG_PATH   , get_str_logfile (glog, ifile)  , colorlbl , colorpth , 1}
   };
   /* *INDENT-ON* */
@@ -1610,6 +1630,10 @@ load_sort_win (WINDOW * main_win, GModule module, GSort * sort)
       continue;
     else if (SORT_BY_BW == field && !conf.bandwidth)
       continue;
+    else if (SORT_BY_BW_OUT == field && !conf.bandwidth_out)
+      continue;
+    else if (SORT_BY_BW_IN == field && !conf.bandwidth_in)
+      continue;
     else if (SORT_BY_PROT == field && !conf.append_protocol)
       continue;
     else if (SORT_BY_MTHD == field && !conf.append_method)
@@ -1654,6 +1678,18 @@ load_sort_win (WINDOW * main_win, GModule module, GSort * sort)
     } else if (SORT_BY_BW == field) {
       menu->items[i].name = alloc_string ("Bandwidth");
       if (sort->field == SORT_BY_BW) {
+        menu->items[i].checked = 1;
+        menu->idx = i;
+      }
+    } else if (SORT_BY_BW_OUT == field) {
+      menu->items[i].name = alloc_string ("Bandwidth outbound");
+      if (sort->field == SORT_BY_BW_OUT) {
+        menu->items[i].checked = 1;
+        menu->idx = i;
+      }
+    } else if (SORT_BY_BW_IN == field) {
+      menu->items[i].name = alloc_string ("Bandwidth inbound");
+      if (sort->field == SORT_BY_BW_IN) {
         menu->items[i].checked = 1;
         menu->idx = i;
       }
@@ -1737,6 +1773,10 @@ load_sort_win (WINDOW * main_win, GModule module, GSort * sort)
           sort->field = SORT_BY_DATA;
         else if (strcmp ("Bandwidth", menu->items[i].name) == 0)
           sort->field = SORT_BY_BW;
+        else if (strcmp ("Bandwidth outbound", menu->items[i].name) == 0)
+          sort->field = SORT_BY_BW_OUT;
+        else if (strcmp ("Bandwidth inbound", menu->items[i].name) == 0)
+          sort->field = SORT_BY_BW_IN;
         else if (strcmp ("Avg. Time Served", menu->items[i].name) == 0)
           sort->field = SORT_BY_AVGTS;
         else if (strcmp ("Cum. Time Served", menu->items[i].name) == 0)

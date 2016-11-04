@@ -68,6 +68,8 @@
 #define T_STATIC_FIL "Static Files"
 #define T_LOG        "Log Size"
 #define T_BW         "Bandwidth"
+#define T_BW_OUT     "Bandwidth outbound"
+#define T_BW_IN      "Bandwidth inbound"
 #define T_LOG_PATH   "Log File"
 
 /* Spinner Label Format */
@@ -151,26 +153,30 @@
 #define GENER_ID   "general"
 
 /* Overall Statistics CSV/JSON Keys */
-#define OVERALL_DATETIME  "date_time"
-#define OVERALL_REQ       "total_requests"
-#define OVERALL_VALID     "valid_requests"
-#define OVERALL_GENTIME   "generation_time"
-#define OVERALL_FAILED    "failed_requests"
-#define OVERALL_VISITORS  "unique_visitors"
-#define OVERALL_FILES     "unique_files"
-#define OVERALL_EXCL_HITS "excluded_hits"
-#define OVERALL_REF       "unique_referrers"
-#define OVERALL_NOTFOUND  "unique_not_found"
-#define OVERALL_STATIC    "unique_static_files"
-#define OVERALL_LOGSIZE   "log_size"
-#define OVERALL_BANDWIDTH "bandwidth"
-#define OVERALL_LOG       "log_path"
+#define OVERALL_DATETIME      "date_time"
+#define OVERALL_REQ           "total_requests"
+#define OVERALL_VALID         "valid_requests"
+#define OVERALL_GENTIME       "generation_time"
+#define OVERALL_FAILED        "failed_requests"
+#define OVERALL_VISITORS      "unique_visitors"
+#define OVERALL_FILES         "unique_files"
+#define OVERALL_EXCL_HITS     "excluded_hits"
+#define OVERALL_REF           "unique_referrers"
+#define OVERALL_NOTFOUND      "unique_not_found"
+#define OVERALL_STATIC        "unique_static_files"
+#define OVERALL_LOGSIZE       "log_size"
+#define OVERALL_BANDWIDTH     "bandwidth outbound"
+#define OVERALL_BANDWIDTH_OUT "bandwidth outbound with headers"
+#define OVERALL_BANDWIDTH_IN  "bandwidth inbound with headers"
+#define OVERALL_LOG           "log_path"
 
 /* Metric Labels */
 #define MTRC_HITS_LBL            "Hits"
 #define MTRC_VISITORS_LBL        "Visitors"
 #define MTRC_VISITORS_SHORT_LBL  "Vis."
 #define MTRC_BW_LBL              "Bandwidth"
+#define MTRC_BW_OUT_LBL          "Bandwidth out"
+#define MTRC_BW_IN_LBL           "Bandwidth in"
 #define MTRC_AVGTS_LBL           "Avg. T.S."
 #define MTRC_CUMTS_LBL           "Cum. T.S."
 #define MTRC_MAXTS_LBL           "Max. T.S."
@@ -308,6 +314,8 @@ typedef struct GOutput_
   int8_t hits;
   int8_t percent;
   int8_t bw;
+  int8_t bw_out;
+  int8_t bw_in;
   int8_t avgts;
   int8_t cumts;
   int8_t maxts;

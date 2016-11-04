@@ -135,6 +135,18 @@ print_csv_metric_block (FILE * fp, GMetrics * nmetrics)
     fprintf (fp, "\"%4.2f%%\",", nmetrics->bw_perc);
   }
 
+  /* bandwidth_out */
+  if (conf.bandwidth_out) {
+    fprintf (fp, "\"%lld\",", (long long) nmetrics->bw_out.nbw);
+    fprintf (fp, "\"%4.2f%%\",", nmetrics->bw_perc_out);
+  }
+
+  /* bandwidth_in */
+  if (conf.bandwidth_in) {
+    fprintf (fp, "\"%lld\",", (long long) nmetrics->bw_in.nbw);
+    fprintf (fp, "\"%4.2f%%\",", nmetrics->bw_perc_in);
+  }
+
   /* time served metrics */
   if (conf.serve_usecs) {
     fprintf (fp, "\"%lld\",", (long long) nmetrics->avgts.nts);
@@ -285,6 +297,14 @@ print_csv_summary (FILE * fp, GLog * glog)
   fmt = "\"%d\",,\"%s\",,,,,,,,\"%llu\",\"%s\"\r\n";
   fprintf (fp, fmt, i++, GENER_ID, glog->resp_size, OVERALL_BANDWIDTH);
 
+  /* bandwidth outbound */
+  fmt = "\"%d\",,\"%s\",,,,,,,,\"%llu\",\"%s\"\r\n";
+  fprintf (fp, fmt, i++, GENER_ID, glog->resp_size_header, OVERALL_BANDWIDTH_OUT);
+
+  /* bandwidth inbound */
+  fmt = "\"%d\",,\"%s\",,,,,,,,\"%llu\",\"%s\"\r\n";
+  fprintf (fp, fmt, i++, GENER_ID, glog->req_size_header, OVERALL_BANDWIDTH_IN);
+
   /* log path */
   if (conf.ifile == NULL)
     conf.ifile = (char *) "STDIN";
@@ -308,6 +328,8 @@ output_csv (GLog * glog, GHolder * holder, const char *filename)
     .hits = glog->valid,
     .visitors = ht_get_size_uniqmap (VISITORS),
     .bw = glog->resp_size,
+	.bw_out = glog->resp_size_header,
+	.bw_in = glog->req_size_header,
   };
 
   if (filename != NULL)

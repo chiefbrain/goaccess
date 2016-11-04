@@ -125,6 +125,19 @@ KHASH_MAP_INIT_STR (su64, uint64_t);
  */
 /*khash_t(iu64) MTRC_BW */
 
+/* Maps numeric data keys to outbound bandwidth (in bytes).
+ * 1 -> 1024
+ * 2 -> 2048
+ */
+/*khash_t(iu64) MTRC_BW_OUT */
+
+/* Maps numeric data keys to inbound bandwidth (in bytes).
+ * 1 -> 1024
+ * 2 -> 2048
+ */
+/*khash_t(iu64) MTRC_BW_IN */
+
+
 /* Maps numeric data keys to cumulative time served (in usecs/msecs).
  * 1 -> 187
  * 2 -> 208
@@ -206,7 +219,7 @@ int ht_insert_agent_value (int key, const char *value);
 int ht_insert_unique_key (const char *key);
 
 int ht_insert_agent (GModule module, int key, int value);
-int ht_insert_bw (GModule module, int key, uint64_t inc);
+int ht_insert_bw (GModule module, int key, uint64_t inc, int bw_type);
 int ht_insert_cumts (GModule module, int key, uint64_t inc);
 int ht_insert_datamap (GModule module, int key, const char *value);
 int ht_insert_hits (GModule module, int key, int inc);
@@ -235,11 +248,11 @@ int ht_get_hits (GModule module, int key);
 int ht_get_keymap (GModule module, const char *key);
 int ht_get_uniqmap (GModule module, const char *key);
 int ht_get_visitors (GModule module, int key);
-uint64_t ht_get_bw (GModule module, int key);
+uint64_t ht_get_bw (GModule module, int key, int bw_type);
 uint64_t ht_get_cumts (GModule module, int key);
 uint64_t ht_get_maxts (GModule module, int key);
 uint64_t ht_get_meta_data (GModule module, const char *key);
-void ht_get_bw_min_max (GModule module, uint64_t * min, uint64_t * max);
+void ht_get_bw_min_max (GModule module, uint64_t * min, uint64_t * max, int bw_type);
 void ht_get_cumts_min_max (GModule module, uint64_t * min, uint64_t * max);
 void ht_get_hits_min_max (GModule module, int *min, int *max);
 void ht_get_maxts_min_max (GModule module, uint64_t * min, uint64_t * max);

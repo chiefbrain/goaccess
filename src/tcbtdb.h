@@ -65,6 +65,8 @@
 #define DB_ROOT      "db_root.tcb"
 #define DB_HITS      "db_hits.tcb"
 #define DB_BW        "db_bw.tcb"
+#define DB_BW_OUT    "db_bw_out.tcb"
+#define DB_BW_IN     "db_bw_in.tcb"
 #define DB_CUMTS     "db_cumts.tcb"
 #define DB_MAXTS     "db_maxts.tcb"
 #define DB_METHODS   "db_methods.tcb"

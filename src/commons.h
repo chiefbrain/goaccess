@@ -113,7 +113,9 @@ typedef struct GPercTotals_
 {
   int hits;                     /* total valid hits */
   int visitors;                 /* total visitors */
-  uint64_t bw;                  /* total bandwidth */
+  uint64_t bw;                  /* outbound bandwidth without headers */
+  uint64_t bw_out;              /* total bandwidth outbound with headers */
+  uint64_t bw_in;               /* total bandwidth inboudn with headers */
 } GPercTotals;
 
 /* Metrics within GHolder or GDashData */
@@ -129,6 +131,8 @@ typedef struct GMetrics
   float hits_perc;
   float visitors_perc;
   float bw_perc;
+  float bw_perc_in;
+  float bw_perc_out;
 
   int hits;
   int visitors;
@@ -140,6 +144,22 @@ typedef struct GMetrics
     char *sbw;
     uint64_t nbw;
   } bw;
+
+  /* holder has a numeric value, while
+   * dashboard has a displayable string value */
+  union
+  {
+    char *sbw;
+    uint64_t nbw;
+  } bw_out;
+
+  /* holder has a numeric value, while
+   * dashboard has a displayable string value */
+  union
+  {
+    char *sbw;
+    uint64_t nbw;
+  } bw_in;
 
   /* holder has a numeric value, while
    * dashboard has a displayable string value */

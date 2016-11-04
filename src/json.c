@@ -620,22 +620,41 @@ pvisitors (GJSON * json, GMetrics * nmetrics, int sp)
 
 /* Write to a buffer bandwidth data. */
 static void
-pbw (GJSON * json, GMetrics * nmetrics, int sp)
+pbw (GJSON * json, GMetrics * nmetrics, int sp, int bw_type)
 {
   int isp = 0;
+  uint64_t t_nbw;
+  uint64_t t_bw_perc;
 
   /* use tabs to prettify output */
   if (conf.json_pretty_print)
     isp = sp + 1;
 
-  if (!conf.bandwidth)
+  if (
+      ( bw_type == MTRC_BW && !conf.bandwidth ) ||
+  	( bw_type == MTRC_BW_OUT && !conf.bandwidth_out ) ||
+  	( bw_type == MTRC_BW_IN && !conf.bandwidth_in )
+  	)
     return;
+
+  if( bw_type == MTRC_BW_OUT ) {
+	  t_nbw = nmetrics->bw_out.nbw;
+	  t_bw_perc = nmetrics->bw_perc_out;
+  } else if( bw_type == MTRC_BW_IN ) {
+	  t_nbw = nmetrics->bw_in.nbw;
+	  t_bw_perc = nmetrics->bw_perc_in;
+  } else {
+	  t_nbw = nmetrics->bw.nbw;
+	  t_bw_perc = nmetrics->bw_perc;
+  }
+
+  //TODO add type
 
   popen_obj_attr (json, "bytes", sp);
   /* print bandwidth */
-  pskeyu64val (json, "count", nmetrics->bw.nbw, isp, 0);
+  pskeyu64val (json, "count", t_nbw, isp, 0);
   /* print bandwidth percent */
-  pskeyfval (json, "percent", nmetrics->bw_perc, isp, 1);
+  pskeyfval (json, "percent", t_bw_perc, isp, 1);
   pclose_obj (json, sp, 0);
 }
 
@@ -728,19 +747,25 @@ pmeta_data_visitors (GJSON * json, GModule module, int sp)
 
 /* Write to a buffer the bytes meta data object. */
 static void
-pmeta_data_bw (GJSON * json, GModule module, int sp)
+pmeta_data_bw (GJSON * json, GModule module, int sp, int bw_type)
 {
   int isp = 0;
   uint64_t max = 0, min = 0;
 
-  if (!conf.bandwidth)
+  if (
+    ( bw_type == MTRC_BW && !conf.bandwidth ) ||
+	( bw_type == MTRC_BW_OUT && !conf.bandwidth_out ) ||
+	( bw_type == MTRC_BW_IN && !conf.bandwidth_in )
+	)
     return;
 
-  ht_get_bw_min_max (module, &min, &max);
+  ht_get_bw_min_max (module, &min, &max, bw_type);
 
   /* use tabs to prettify output */
   if (conf.json_pretty_print)
     isp = sp + 1;
+
+  //TODO add type
 
   popen_obj_attr (json, "bytes", sp);
   pskeyu64val (json, "count", ht_get_meta_data (module, "bytes"), isp, 0);
@@ -834,7 +859,9 @@ print_meta_data (GJSON * json, GHolder * h, int sp)
   pmeta_data_avgts (json, h->module, iisp);
   pmeta_data_cumts (json, h->module, iisp);
   pmeta_data_maxts (json, h->module, iisp);
-  pmeta_data_bw (json, h->module, iisp);
+  pmeta_data_bw (json, h->module, iisp, MTRC_BW);
+  pmeta_data_bw (json, h->module, iisp, MTRC_BW_OUT);
+  pmeta_data_bw (json, h->module, iisp, MTRC_BW_IN);
   pmeta_data_visitors (json, h->module, iisp);
   pmeta_data_hits (json, h->module, iisp);
 
@@ -849,8 +876,13 @@ print_json_block (GJSON * json, GMetrics * nmetrics, int sp)
   phits (json, nmetrics, sp);
   /* print visitors */
   pvisitors (json, nmetrics, sp);
+
   /* print bandwidth */
-  pbw (json, nmetrics, sp);
+  pbw (json, nmetrics, sp, MTRC_BW);
+  /* print outbound bandwidth */
+  pbw (json, nmetrics, sp, MTRC_BW_OUT);
+  /* print inbound bandwidth */
+  pbw (json, nmetrics, sp, MTRC_BW_IN);
 
   /* print time served metrics */
   pavgts (json, nmetrics, sp);
@@ -1120,6 +1152,8 @@ init_json_output (GLog * glog, GHolder * holder)
     .hits = glog->valid,
     .visitors = ht_get_size_uniqmap (VISITORS),
     .bw = glog->resp_size,
+	.bw_out = glog->resp_size_header,
+	.bw_in = glog->req_size_header,
   };
 
   json = new_gjson ();

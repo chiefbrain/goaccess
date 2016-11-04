@@ -99,6 +99,10 @@ free_dashboard_data (GDashData item)
     free (item.metrics->data);
   if (item.metrics->bw.sbw)
     free (item.metrics->bw.sbw);
+  if (item.metrics->bw_out.sbw)
+    free (item.metrics->bw_out.sbw);
+  if (item.metrics->bw_in.sbw)
+    free (item.metrics->bw_in.sbw);
   if (conf.serve_usecs && item.metrics->avgts.sts)
     free (item.metrics->avgts.sts);
   if (conf.serve_usecs && item.metrics->cumts.sts)
@@ -632,13 +636,32 @@ out:
 
 /* Render the bandwidth metric for each panel */
 static void
-render_bw (GDashModule * data, GDashRender render, int *x)
+render_bw (GDashModule * data, GDashRender render, int *x, int bw_type)
 {
-  GColors *color = get_color_by_item_module (COLOR_MTRC_BW, data->module);
-  WINDOW *win = render.win;
+  int T_COLOR_MTRC;
+  int T_DASH_BW_LEN;
 
+  WINDOW *win = render.win;
   int y = render.y, w = render.w, idx = render.idx, sel = render.sel;
-  char *bw = data->data[idx].metrics->bw.sbw;
+
+  GColors *color;
+  char *bw;
+
+  if( bw_type == MTRC_BW_OUT ) {
+    T_COLOR_MTRC = COLOR_MTRC_BW_OUT;
+    T_DASH_BW_LEN = DASH_BW_OUT_LEN;
+    bw = data->data[idx].metrics->bw_out.sbw;
+  } else if( bw_type == MTRC_BW_IN ) {
+    T_COLOR_MTRC = COLOR_MTRC_BW_IN;
+    T_DASH_BW_LEN = DASH_BW_IN_LEN;
+    bw = data->data[idx].metrics->bw_in.sbw;
+  } else {
+      T_COLOR_MTRC = COLOR_MTRC_BW;
+      T_DASH_BW_LEN = DASH_BW_LEN;
+      bw = data->data[idx].metrics->bw.sbw;
+  }
+
+  color = get_color_by_item_module (T_COLOR_MTRC, data->module);
 
   if (data->module == HOSTS && data->data[idx].is_subitem)
     goto out;
@@ -654,7 +677,7 @@ render_bw (GDashModule * data, GDashRender render, int *x)
   }
 
 out:
-  *x += DASH_BW_LEN + DASH_SPACE;
+  *x += T_DASH_BW_LEN + DASH_SPACE;
 }
 
 /* Render the percent metric for each panel */
@@ -814,7 +837,13 @@ render_metrics (GDashModule * data, GDashRender render, int expanded)
 
   /* render bandwidth if available */
   if (conf.bandwidth && output->bw)
-    render_bw (data, render, &x);
+	render_bw (data, render, &x, MTRC_BW);
+  /* render outbound bandwidth if available */
+  if (conf.bandwidth_out && output->bw_out)
+	render_bw (data, render, &x, MTRC_BW_OUT);
+  /* render inbound bandwidth if available */
+  if (conf.bandwidth_in && output->bw_in)
+	render_bw (data, render, &x, MTRC_BW_IN);
 
   /* render avgts, cumts and maxts if available */
   if (output->avgts && conf.serve_usecs)
@@ -932,6 +961,10 @@ render_cols (WINDOW * win, GDashModule * data, int *y)
 
   if (output->bw && conf.bandwidth)
     rprint_col (win, *y, &x, DASH_BW_LEN, "%*s", MTRC_BW_LBL);
+  if (output->bw_out && conf.bandwidth_out)
+    rprint_col (win, *y, &x, DASH_BW_OUT_LEN, "%*s", MTRC_BW_OUT_LBL);
+  if (output->bw_in && conf.bandwidth_in)
+    rprint_col (win, *y, &x, DASH_BW_IN_LEN, "%*s", MTRC_BW_IN_LBL);
 
   if (output->avgts && conf.serve_usecs)
     rprint_col (win, *y, &x, DASH_SRV_TM_LEN, "%*s", MTRC_AVGTS_LBL);
@@ -1282,6 +1315,8 @@ add_sub_item_to_dash (GDash ** dash, GHolderItem item, GModule module, int *i)
 
     idata->metrics->visitors = iter->metrics->visitors;
     idata->metrics->bw.sbw = filesize_str (iter->metrics->bw.nbw);
+    idata->metrics->bw_out.sbw = filesize_str (iter->metrics->bw_out.nbw);
+    idata->metrics->bw_in.sbw = filesize_str (iter->metrics->bw_in.nbw);
     idata->metrics->data = xstrdup (entry);
     idata->metrics->hits = iter->metrics->hits;
     if (conf.serve_usecs) {
@@ -1309,6 +1344,8 @@ add_item_to_dash (GDash ** dash, GHolderItem item, GModule module)
   idata->metrics = new_gmetrics ();
 
   idata->metrics->bw.sbw = filesize_str (item.metrics->bw.nbw);
+  idata->metrics->bw_out.sbw = filesize_str (item.metrics->bw_out.nbw);
+  idata->metrics->bw_in.sbw = filesize_str (item.metrics->bw_in.nbw);
   idata->metrics->data = xstrdup (item.metrics->data);
   idata->metrics->hits = item.metrics->hits;
   idata->metrics->visitors = item.metrics->visitors;

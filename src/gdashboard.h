@@ -54,6 +54,8 @@
 #define DASH_INIT_X      1  /* start position (x-axis) */
 
 #define DASH_BW_LEN      11 /* max bandwidth string length, e.g., 151.69 MiB */
+#define DASH_BW_OUT_LEN  15 /* max outbound bandwidth string length, e.g., 151.69 MiB */
+#define DASH_BW_IN_LEN   14 /* max inbound bandwidth string length, e.g., 151.69 MiB */
 #define DASH_SRV_TM_LEN  9  /* max time served length, e.g., 483.00 us */
 #define DASH_SPACE       1  /* space between columns (metrics) */
 

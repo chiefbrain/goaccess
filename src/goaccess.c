@@ -1022,9 +1022,15 @@ set_general_stats (void)
   glog->invalid = ht_get_genstats ("failed_requests");
   glog->processed = ht_get_genstats ("total_requests");
   glog->resp_size = ht_get_genstats_bw ("bandwidth");
+  glog->resp_size_header = ht_get_genstats_bw ("bandwidth_out");
+  glog->req_size_header = ht_get_genstats_bw ("bandwidth_in");
   glog->valid = ht_get_genstats ("valid_requests");
 
   if (glog->resp_size > 0)
+    conf.bandwidth = 1;
+  if (glog->resp_size_header > 0)
+    conf.bandwidth = 1;
+  if (glog->req_size_header > 0)
     conf.bandwidth = 1;
   if (ht_get_genstats ("serve_usecs"))
     conf.serve_usecs = 1;

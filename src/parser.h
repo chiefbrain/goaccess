@@ -73,6 +73,8 @@ typedef struct GLogItem_
   char site[REF_SITE_LEN + 1];
 
   uint64_t resp_size;
+  uint64_t resp_size_header;
+  uint64_t req_size_header;
   uint64_t serve_time;
 
   int type_ip;
@@ -93,6 +95,8 @@ typedef struct GLog_
   unsigned int processed;
   unsigned int valid;
   unsigned long long resp_size;
+  unsigned long long resp_size_header;
+  unsigned long long req_size_header;
   unsigned short load_from_disk_only;
   unsigned short piping;
   GLogItem *items;
@@ -159,6 +163,8 @@ typedef struct GParse_
   void (*hits) (int data_nkey, GModule module);
   void (*visitor) (int uniq_nkey, GModule module);
   void (*bw) (int data_nkey, uint64_t size, GModule module);
+  void (*bw_out) (int data_nkey, uint64_t size, GModule module);
+  void (*bw_in) (int data_nkey, uint64_t size, GModule module);
   void (*cumts) (int data_nkey, uint64_t ts, GModule module);
   void (*maxts) (int data_nkey, uint64_t ts, GModule module);
   void (*method) (int data_nkey, const char *method, GModule module);

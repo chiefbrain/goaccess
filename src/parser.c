@@ -102,6 +102,8 @@ static void insert_rootmap (int root_nkey, const char *root, GModule module);
 static void insert_hit (int data_nkey, GModule module);
 static void insert_visitor (int uniq_nkey, GModule module);
 static void insert_bw (int data_nkey, uint64_t size, GModule module);
+static void insert_bw_out (int data_nkey, uint64_t size, GModule module);
+static void insert_bw_in (int data_nkey, uint64_t size, GModule module);
 static void insert_cumts (int data_nkey, uint64_t ts, GModule module);
 static void insert_maxts (int data_nkey, uint64_t ts, GModule module);
 static void insert_method (int data_nkey, const char *method, GModule module);
@@ -117,7 +119,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-    insert_bw,
+	insert_bw,
+    insert_bw_out,
+	insert_bw_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -130,7 +134,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-    insert_bw,
+	insert_bw,
+	insert_bw_out,
+	insert_bw_in,
     insert_cumts,
     insert_maxts,
     insert_method,
@@ -143,7 +149,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-    insert_bw,
+	insert_bw,
+	insert_bw_out,
+	insert_bw_in,
     insert_cumts,
     insert_maxts,
     insert_method,
@@ -156,7 +164,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-    insert_bw,
+	insert_bw,
+	insert_bw_out,
+	insert_bw_in,
     insert_cumts,
     insert_maxts,
     insert_method,
@@ -169,7 +179,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-    insert_bw,
+	insert_bw,
+	insert_bw_out,
+	insert_bw_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -182,7 +194,9 @@ static GParse paneling[] = {
     insert_rootmap,
     insert_hit,
     insert_visitor,
-    insert_bw,
+	insert_bw,
+	insert_bw_out,
+	insert_bw_in,
     insert_cumts,
     insert_maxts,
     insert_method,
@@ -195,7 +209,9 @@ static GParse paneling[] = {
     insert_rootmap,
     insert_hit,
     insert_visitor,
-    insert_bw,
+	insert_bw,
+	insert_bw_out,
+	insert_bw_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -208,7 +224,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-    insert_bw,
+	insert_bw,
+	insert_bw_out,
+	insert_bw_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -221,7 +239,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-    insert_bw,
+	insert_bw,
+	insert_bw_out,
+	insert_bw_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -234,7 +254,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-    insert_bw,
+	insert_bw,
+	insert_bw_out,
+	insert_bw_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -249,7 +271,9 @@ static GParse paneling[] = {
     insert_rootmap,
     insert_hit,
     insert_visitor,
-    insert_bw,
+	insert_bw,
+	insert_bw_out,
+	insert_bw_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -264,7 +288,9 @@ static GParse paneling[] = {
     insert_rootmap,
     insert_hit,
     insert_visitor,
-    insert_bw,
+	insert_bw,
+	insert_bw_out,
+	insert_bw_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -277,7 +303,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-    insert_bw,
+	insert_bw,
+	insert_bw_out,
+	insert_bw_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -290,7 +318,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-    insert_bw,
+	insert_bw,
+	insert_bw_out,
+	insert_bw_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -391,6 +421,8 @@ reset_struct (GLog * glog)
   glog->invalid = 0;
   glog->processed = 0;
   glog->resp_size = 0LL;
+  glog->resp_size_header = 0LL;
+  glog->req_size_header = 0LL;
   glog->valid = 0;
 }
 
@@ -435,6 +467,8 @@ init_log_item (GLog * glog)
   logitem->req_key = NULL;
   logitem->req = NULL;
   logitem->resp_size = 0LL;
+  logitem->resp_size_header = 0LL;
+  logitem->req_size_header = 0LL;
   logitem->serve_time = 0;
   logitem->status = NULL;
   logitem->time = NULL;
@@ -989,7 +1023,7 @@ parse_specifier (GLogItem * logitem, char **str, const char *p, const char *end)
 
   char *pch, *sEnd, *bEnd, *tkn = NULL;
   double serve_secs = 0.0;
-  uint64_t bandw = 0, serve_time = 0;
+  uint64_t bandw = 0, bandw_out = 0, bandw_in = 0, serve_time = 0;
 
   errno = 0;
   memset (&tm, 0, sizeof (tm));
@@ -1157,6 +1191,34 @@ parse_specifier (GLogItem * logitem, char **str, const char *p, const char *end)
       bandw = 0;
     logitem->resp_size = bandw;
     conf.bandwidth = 1;
+    free (tkn);
+    break;
+    /* size of response in bytes - including HTTP headers */
+  case 'B':
+    if (logitem->resp_size_header)
+      return spec_err (logitem, SPEC_TOKN_SET, *p, NULL);
+    if (!(tkn = parse_string (&(*str), end, 1)))
+      return spec_err (logitem, SPEC_TOKN_NUL, *p, NULL);
+
+    bandw_out = strtoull (tkn, &bEnd, 10);
+    if (tkn == bEnd || *bEnd != '\0' || errno == ERANGE)
+      bandw_out = 0;
+    logitem->resp_size_header = bandw_out;
+    conf.bandwidth_out = 1;
+    free (tkn);
+    break;
+    /* size of request in bytes - including HTTP headers */
+  case 'l':
+    if (logitem->req_size_header)
+      return spec_err (logitem, SPEC_TOKN_SET, *p, NULL);
+    if (!(tkn = parse_string (&(*str), end, 1)))
+      return spec_err (logitem, SPEC_TOKN_NUL, *p, NULL);
+
+    bandw_in = strtoull (tkn, &bEnd, 10);
+    if (tkn == bEnd || *bEnd != '\0' || errno == ERANGE)
+    	bandw_in = 0;
+    logitem->req_size_header = bandw_in;
+    conf.bandwidth_in = 1;
     free (tkn);
     break;
     /* referrer */
@@ -1359,13 +1421,33 @@ strip_qstring (char *req)
   }
 }
 
-/* Increment the overall bandwidth. */
+/* Increment the overall outbound bandwidth. */
 static void
 inc_resp_size (GLog * glog, uint64_t resp_size)
 {
   glog->resp_size += resp_size;
 #ifdef TCB_BTREE
   ht_insert_genstats_bw ("bandwidth", resp_size);
+#endif
+}
+
+/* Increment the overall outbound bandwidth with headers. */
+static void
+inc_resp_size_header (GLog * glog, uint64_t resp_size_header)
+{
+  glog->resp_size_header += resp_size_header;
+#ifdef TCB_BTREE
+  ht_insert_genstats_bw ("bandwidth_out", resp_size_header);
+#endif
+}
+
+/* Increment the overall inbound bandwidth with headers. */
+static void
+inc_req_size_header (GLog * glog, uint64_t req_size_header)
+{
+  glog->req_size_header += req_size_header;
+#ifdef TCB_BTREE
+  ht_insert_genstats_bw ("bandwidth_in", req_size_header);
 #endif
 }
 
@@ -1649,7 +1731,25 @@ insert_visitor (int uniq_nkey, GModule module)
 static void
 insert_bw (int data_nkey, uint64_t size, GModule module)
 {
-  ht_insert_bw (module, data_nkey, size);
+  ht_insert_bw (module, data_nkey, size, MTRC_BW);
+  ht_insert_meta_data (module, "bytes", size);
+}
+
+/* A wrapper function to increases outbound bandwidth counter from an int
+ * key. */
+static void
+insert_bw_out (int data_nkey, uint64_t size, GModule module)
+{
+  ht_insert_bw (module, data_nkey, size, MTRC_BW_OUT);
+  ht_insert_meta_data (module, "bytes", size);
+}
+
+/* A wrapper function to increases inbound bandwidth counter from an int
+ * key. */
+static void
+insert_bw_in (int data_nkey, uint64_t size, GModule module)
+{
+  ht_insert_bw (module, data_nkey, size, MTRC_BW_IN);
   ht_insert_meta_data (module, "bytes", size);
 }
 
@@ -2215,6 +2315,12 @@ set_datamap (GLogItem * logitem, GKeyData * kdata, const GParse * parse)
   /* insert bandwidth */
   if (parse->bw)
     parse->bw (kdata->data_nkey, logitem->resp_size, module);
+  /* insert bandwidth_out */
+  if (parse->bw_out)
+    parse->bw_out (kdata->data_nkey, logitem->resp_size_header, module);
+  /* insert bandwidth_in */
+  if (parse->bw_in)
+	parse->bw_in (kdata->data_nkey, logitem->req_size_header, module);
   /* insert averages time served */
   if (parse->cumts)
     parse->cumts (kdata->data_nkey, logitem->serve_time, module);
@@ -2340,6 +2446,9 @@ pre_process_log (GLog * glog, char *line, int dry_run)
   logitem->uniq_key = get_uniq_visitor_key (logitem);
 
   inc_resp_size (glog, logitem->resp_size);
+  inc_resp_size_header (glog, logitem->resp_size_header);
+  inc_req_size_header (glog, logitem->req_size_header);
+
   process_log (logitem);
   count_valid (glog);
 

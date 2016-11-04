@@ -299,6 +299,8 @@ sort_sub_list (GHolder * h, GSort sort)
       arr[j].metrics = new_gmetrics ();
 
       arr[j].metrics->bw.nbw = iter->metrics->bw.nbw;
+      arr[j].metrics->bw_out.nbw = iter->metrics->bw_out.nbw;
+      arr[j].metrics->bw_in.nbw = iter->metrics->bw_in.nbw;
       arr[j].metrics->data = xstrdup (iter->metrics->data);
       arr[j].metrics->hits = iter->metrics->hits;
       arr[j].metrics->id = iter->metrics->id;
@@ -456,12 +458,14 @@ add_data_to_holder (GRawDataItem item, GHolder * h, GRawDataType type,
 {
   char *data = NULL, *method = NULL, *protocol = NULL;
   int hits = 0, visitors = 0;
-  uint64_t bw = 0, cumts = 0, maxts = 0;
+  uint64_t bw = 0, bw_out = 0, bw_in = 0, cumts = 0, maxts = 0;
 
   if (set_data_hits_keys (h->module, item, type, &data, &hits) == 1)
     return;
 
-  bw = ht_get_bw (h->module, item.key);
+  bw = ht_get_bw (h->module, item.key, MTRC_BW);
+  bw_out = ht_get_bw (h->module, item.key, MTRC_BW_OUT);
+  bw_in = ht_get_bw (h->module, item.key, MTRC_BW_IN);
   cumts = ht_get_cumts (h->module, item.key);
   maxts = ht_get_maxts (h->module, item.key);
   visitors = ht_get_visitors (h->module, item.key);
@@ -471,6 +475,8 @@ add_data_to_holder (GRawDataItem item, GHolder * h, GRawDataType type,
   h->items[h->idx].metrics->visitors = visitors;
   h->items[h->idx].metrics->data = data;
   h->items[h->idx].metrics->bw.nbw = bw;
+  h->items[h->idx].metrics->bw_out.nbw = bw_out;
+  h->items[h->idx].metrics->bw_in.nbw = bw_in;
   h->items[h->idx].metrics->avgts.nts = cumts / hits;
   h->items[h->idx].metrics->cumts.nts = cumts;
   h->items[h->idx].metrics->maxts.nts = maxts;
@@ -498,13 +504,15 @@ set_root_metrics (GRawDataItem item, GRawDataType type, GModule module,
 {
   GMetrics *metrics;
   char *data = NULL;
-  uint64_t bw = 0, cumts = 0, maxts = 0;
+  uint64_t bw = 0, bw_out = 0, bw_in = 0, cumts = 0, maxts = 0;
   int hits = 0, visitors = 0;
 
   if (set_data_hits_keys (module, item, type, &data, &hits) == 1)
     return 1;
 
-  bw = ht_get_bw (module, item.key);
+  bw = ht_get_bw (module, item.key, MTRC_BW);
+  bw_out = ht_get_bw (module, item.key, MTRC_BW_OUT);
+  bw_in = ht_get_bw (module, item.key, MTRC_BW_IN);
   cumts = ht_get_cumts (module, item.key);
   maxts = ht_get_maxts (module, item.key);
   visitors = ht_get_visitors (module, item.key);
@@ -514,6 +522,8 @@ set_root_metrics (GRawDataItem item, GRawDataType type, GModule module,
   metrics->cumts.nts = cumts;
   metrics->maxts.nts = maxts;
   metrics->bw.nbw = bw;
+  metrics->bw_out.nbw = bw_out;
+  metrics->bw_in.nbw = bw_in;
   metrics->data = data;
   metrics->hits = hits;
   metrics->visitors = visitors;
@@ -561,6 +571,8 @@ add_root_to_holder (GRawDataItem item, GHolder * h, GRawDataType type,
   h->items[idx].metrics = metrics;
   h->items[idx].metrics->cumts.nts += nmetrics->cumts.nts;
   h->items[idx].metrics->bw.nbw += nmetrics->bw.nbw;
+  h->items[idx].metrics->bw_out.nbw += nmetrics->bw_out.nbw;
+  h->items[idx].metrics->bw_in.nbw += nmetrics->bw_in.nbw;
   h->items[idx].metrics->hits += nmetrics->hits;
   h->items[idx].metrics->visitors += nmetrics->visitors;
   h->items[idx].metrics->avgts.nts =
