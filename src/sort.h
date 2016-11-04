@@ -37,7 +37,7 @@
 #include "commons.h"
 #include "parser.h"
 
-#define SORT_MAX_OPTS   11
+#define SORT_MAX_OPTS   12
 
 /* See GEnum for mapping */
 #define SORT_FIELD_LEN  11 + 1  /* longest metric name */

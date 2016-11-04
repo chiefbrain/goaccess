@@ -41,6 +41,7 @@
 #include "error.h"
 #include "settings.h"
 #include "util.h"
+#include "gstorage.h"
 
 #include "sort.h"
 
@@ -212,7 +213,6 @@ cmp_bw (const void *a, const void *b, int bw_type, bool asc)
 
   uint64_t va;
   uint64_t vb;
-
 
   if( bw_type == MTRC_BW_OUT ) {
 	va = ia->metrics->bw_out.nbw;
