@@ -110,6 +110,12 @@ static GHTML htmldef[] = {
   {REFERRERS       , 1, print_metrics } ,
   {REFERRING_SITES , 1, print_metrics } ,
   {KEYPHRASES      , 1, print_metrics } ,
+  {STATUS_CODES    , 1, print_metrics, {
+    {CHART_VBAR, hits_visitors_plot, 0, 1},
+    {CHART_VBAR, hits_bw_plot_wrapper, 0, 1},
+	{CHART_VBAR, hits_bw_plot_wrapper_out, 0, 1},
+	{CHART_VBAR, hits_bw_plot_wrapper_in, 0, 1},
+  }},
 #ifdef HAVE_LIBGEOIP
   {GEO_LOCATION    , 1, print_metrics, {
     {CHART_VBAR, hits_visitors_plot, 0, 1},
@@ -118,12 +124,6 @@ static GHTML htmldef[] = {
 	{CHART_VBAR, hits_bw_plot_wrapper_in, 0, 1},
   }},
 #endif
-  {STATUS_CODES    , 1, print_metrics, {
-    {CHART_VBAR, hits_visitors_plot, 0, 1},
-    {CHART_VBAR, hits_bw_plot_wrapper, 0, 1},
-	{CHART_VBAR, hits_bw_plot_wrapper_out, 0, 1},
-	{CHART_VBAR, hits_bw_plot_wrapper_in, 0, 1},
-  }},
 };
 /* *INDENT-ON* */
 
