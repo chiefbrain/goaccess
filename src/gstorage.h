@@ -33,7 +33,7 @@
 #include "commons.h"
 
 /* Total number of storage metrics (GSMetric) */
-#define GSMTRC_TOTAL 14
+#define GSMTRC_TOTAL 16
 
 /* Enumerated Storage Metrics */
 typedef enum GSMetric_

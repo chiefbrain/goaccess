@@ -638,8 +638,8 @@ out:
 static void
 render_bw (GDashModule * data, GDashRender render, int *x, int bw_type)
 {
-  int T_COLOR_MTRC;
-  int T_DASH_BW_LEN;
+  int color_mtrc;
+  int len;
 
   WINDOW *win = render.win;
   int y = render.y, w = render.w, idx = render.idx, sel = render.sel;
@@ -648,20 +648,20 @@ render_bw (GDashModule * data, GDashRender render, int *x, int bw_type)
   char *bw;
 
   if( bw_type == MTRC_BW_OUT ) {
-    T_COLOR_MTRC = COLOR_MTRC_BW_OUT;
-    T_DASH_BW_LEN = DASH_BW_OUT_LEN;
+	color_mtrc = COLOR_MTRC_BW_OUT;
+    len = DASH_BW_IN_LEN;
     bw = data->data[idx].metrics->bw_out.sbw;
   } else if( bw_type == MTRC_BW_IN ) {
-    T_COLOR_MTRC = COLOR_MTRC_BW_IN;
-    T_DASH_BW_LEN = DASH_BW_IN_LEN;
+	color_mtrc = COLOR_MTRC_BW_IN;
+    len = DASH_BW_LEN;
     bw = data->data[idx].metrics->bw_in.sbw;
   } else {
-      T_COLOR_MTRC = COLOR_MTRC_BW;
-      T_DASH_BW_LEN = DASH_BW_LEN;
+      color_mtrc = COLOR_MTRC_BW;
+      len = DASH_BW_OUT_LEN;
       bw = data->data[idx].metrics->bw.sbw;
   }
 
-  color = get_color_by_item_module (T_COLOR_MTRC, data->module);
+  color = get_color_by_item_module (color_mtrc, data->module);
 
   if (data->module == HOSTS && data->data[idx].is_subitem)
     goto out;
@@ -677,7 +677,7 @@ render_bw (GDashModule * data, GDashRender render, int *x, int bw_type)
   }
 
 out:
-  *x += T_DASH_BW_LEN + DASH_SPACE;
+  *x += len + DASH_SPACE;
 }
 
 /* Render the percent metric for each panel */
