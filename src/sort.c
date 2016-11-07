@@ -44,6 +44,8 @@
 
 #include "sort.h"
 
+#include "gstorage.h"
+
 /* *INDENT-OFF* */
 const int sort_choices[][SORT_MAX_OPTS] = {
   /* VISITORS */
