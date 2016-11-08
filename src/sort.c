@@ -41,6 +41,7 @@
 #include "error.h"
 #include "settings.h"
 #include "util.h"
+#include "ui.h"
 
 #include "sort.h"
 
@@ -221,7 +222,7 @@ cmp_raw_str_desc (const void *a, const void *b)
 
 /* Sort 'bandwidth' metric */
 static int
-cmp_bw (const void *a, const void *b, int bw_type, bool asc)
+cmp_bw (const void *a, const void *b, GSMetric bw_type, bool asc)
 {
   const GHolderItem *ia = a;
   const GHolderItem *ib = b;
@@ -247,14 +248,14 @@ cmp_bw (const void *a, const void *b, int bw_type, bool asc)
 }
 
 static int
-cmp_bw_desc (const void *a, const void *b, int bw_type)
+cmp_bw_desc (const void *a, const void *b, GSMetric bw_type)
 {
   return cmp_bw(a, b, bw_type, FALSE);
 }
 
 /* Sort 'bandwidth' metric ascending */
 static int
-cmp_bw_asc (const void *a, const void *b, int bw_type)
+cmp_bw_asc (const void *a, const void *b, GSMetric bw_type)
 {
   return cmp_bw(a, b, bw_type, TRUE);
 }
@@ -463,9 +464,9 @@ get_sort_field_key (GSortField field)
     {"BY_HITS", "hits"},
     {"BY_VISITORS", "visitors"},
     {"BY_DATA", "data"},
-    {"BY_BW", "bytes"},
-	{"BY_BW_OUT", "bytes"},
-	{"BY_BW_IN", "bytes"},
+    {"BY_BW", OVERALL_BANDWIDTH},
+	{"BY_BW_OUT", OVERALL_BANDWIDTH_IN},
+	{"BY_BW_IN", OVERALL_BANDWIDTH_OUT},
     {"BY_AVGTS", "avgts"},
     {"BY_CUMTS", "cumts"},
     {"BY_MAXTS", "maxts"},

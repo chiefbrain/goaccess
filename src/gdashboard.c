@@ -636,7 +636,7 @@ out:
 
 /* Render the bandwidth metric for each panel */
 static void
-render_bw (GDashModule * data, GDashRender render, int *x, int bw_type)
+render_bw (GDashModule * data, GDashRender render, int *x, GSMetric bw_type)
 {
   int color_mtrc;
   int len;

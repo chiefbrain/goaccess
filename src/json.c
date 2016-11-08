@@ -564,9 +564,22 @@ poverall_log_size (GJSON * json, GLog * glog, int sp)
 /* Write to a buffer the total bandwidth consumed under the overall
  * object. */
 static void
-poverall_bandwidth (GJSON * json, GLog * glog, int sp)
+poverall_bandwidth (GJSON * json, GLog * glog, int sp, GSMetric bw_type)
 {
-  pskeyu64val (json, OVERALL_BANDWIDTH, glog->resp_size, sp, 0);
+  unsigned long long int t_data;
+  const char* t_key;
+
+  if( bw_type == MTRC_BW_OUT ) {
+	  t_data = glog->resp_size_header;
+	  t_key = OVERALL_BANDWIDTH_OUT;
+  } else if( bw_type == MTRC_BW_IN ) {
+	  t_data = glog->req_size_header;
+	  t_key = OVERALL_BANDWIDTH_IN;
+  } else {
+	  t_data = glog->resp_size;
+	  t_key = OVERALL_BANDWIDTH;
+  }
+  pskeyu64val (json, t_key, t_data, sp, 0);
 }
 
 /* Write to a buffer the path of the log being parsed under the
@@ -620,8 +633,9 @@ pvisitors (GJSON * json, GMetrics * nmetrics, int sp)
 
 /* Write to a buffer bandwidth data. */
 static void
-pbw (GJSON * json, GMetrics * nmetrics, int sp, int bw_type)
+pbw (GJSON * json, GMetrics * nmetrics, int sp, GSMetric bw_type)
 {
+  const char* t_key;
   int isp = 0;
   uint64_t t_nbw;
   uint64_t t_bw_perc;
@@ -640,17 +654,18 @@ pbw (GJSON * json, GMetrics * nmetrics, int sp, int bw_type)
   if( bw_type == MTRC_BW_OUT ) {
 	  t_nbw = nmetrics->bw_out.nbw;
 	  t_bw_perc = nmetrics->bw_perc_out;
+	  t_key = OVERALL_BANDWIDTH_OUT;
   } else if( bw_type == MTRC_BW_IN ) {
 	  t_nbw = nmetrics->bw_in.nbw;
 	  t_bw_perc = nmetrics->bw_perc_in;
+	  t_key = OVERALL_BANDWIDTH_IN;
   } else {
 	  t_nbw = nmetrics->bw.nbw;
 	  t_bw_perc = nmetrics->bw_perc;
+	  t_key = OVERALL_BANDWIDTH;
   }
 
-  //TODO add type
-
-  popen_obj_attr (json, "bytes", sp);
+  popen_obj_attr (json, t_key, sp);
   /* print bandwidth */
   pskeyu64val (json, "count", t_nbw, isp, 0);
   /* print bandwidth percent */
@@ -747,8 +762,9 @@ pmeta_data_visitors (GJSON * json, GModule module, int sp)
 
 /* Write to a buffer the bytes meta data object. */
 static void
-pmeta_data_bw (GJSON * json, GModule module, int sp, int bw_type)
+pmeta_data_bw (GJSON * json, GModule module, int sp, GSMetric bw_type)
 {
+  const char* t_key;
   int isp = 0;
   uint64_t max = 0, min = 0;
 
@@ -759,16 +775,22 @@ pmeta_data_bw (GJSON * json, GModule module, int sp, int bw_type)
 	)
     return;
 
+  if( bw_type == MTRC_BW_OUT ) {
+	  t_key = OVERALL_BANDWIDTH_OUT;
+  } else if( bw_type == MTRC_BW_IN ) {
+	  t_key = OVERALL_BANDWIDTH_IN;
+  } else {
+	  t_key = OVERALL_BANDWIDTH;
+  }
+
   ht_get_bw_min_max (module, &min, &max, bw_type);
 
   /* use tabs to prettify output */
   if (conf.json_pretty_print)
     isp = sp + 1;
 
-  //TODO add type
-
-  popen_obj_attr (json, "bytes", sp);
-  pskeyu64val (json, "count", ht_get_meta_data (module, "bytes"), isp, 0);
+  popen_obj_attr (json, t_key, sp);
+  pskeyu64val (json, "count", ht_get_meta_data (module, t_key), isp, 0);
   pskeyu64val (json, "max", max, isp, 0);
   pskeyu64val (json, "min", min, isp, 1);
   pclose_obj (json, sp, 0);
@@ -1133,7 +1155,11 @@ print_json_summary (GJSON * json, GLog * glog)
   /* log size */
   poverall_log_size (json, glog, isp);
   /* bandwidth */
-  poverall_bandwidth (json, glog, isp);
+  poverall_bandwidth (json, glog, isp, MTRC_BW);
+  /* bandwidth */
+  poverall_bandwidth (json, glog, isp, MTRC_BW_OUT);
+  /* bandwidth */
+  poverall_bandwidth (json, glog, isp, MTRC_BW_IN);
   /* log path */
   poverall_log (json, isp);
   pclose_obj (json, sp, num_panels () > 0 ? 0 : 1);

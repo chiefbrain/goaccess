@@ -101,9 +101,9 @@ static void insert_rootmap (int root_nkey, const char *root, GModule module);
 /* insertion metric routines */
 static void insert_hit (int data_nkey, GModule module);
 static void insert_visitor (int uniq_nkey, GModule module);
-static void insert_bw (int data_nkey, uint64_t size, GModule module);
-static void insert_bw_out (int data_nkey, uint64_t size, GModule module);
-static void insert_bw_in (int data_nkey, uint64_t size, GModule module);
+static void insert_bw_wrapper (int data_nkey, uint64_t size, GModule module);
+static void insert_bw_wrapper_out (int data_nkey, uint64_t size, GModule module);
+static void insert_bw_wrapper_in (int data_nkey, uint64_t size, GModule module);
 static void insert_cumts (int data_nkey, uint64_t ts, GModule module);
 static void insert_maxts (int data_nkey, uint64_t ts, GModule module);
 static void insert_method (int data_nkey, const char *method, GModule module);
@@ -119,9 +119,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-	insert_bw,
-    insert_bw_out,
-	insert_bw_in,
+	insert_bw_wrapper,
+    insert_bw_wrapper_out,
+	insert_bw_wrapper_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -134,9 +134,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-	insert_bw,
-	insert_bw_out,
-	insert_bw_in,
+	insert_bw_wrapper,
+	insert_bw_wrapper_out,
+	insert_bw_wrapper_in,
     insert_cumts,
     insert_maxts,
     insert_method,
@@ -149,9 +149,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-	insert_bw,
-	insert_bw_out,
-	insert_bw_in,
+	insert_bw_wrapper,
+	insert_bw_wrapper_out,
+	insert_bw_wrapper_in,
     insert_cumts,
     insert_maxts,
     insert_method,
@@ -164,9 +164,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-	insert_bw,
-	insert_bw_out,
-	insert_bw_in,
+	insert_bw_wrapper,
+	insert_bw_wrapper_out,
+	insert_bw_wrapper_in,
     insert_cumts,
     insert_maxts,
     insert_method,
@@ -179,9 +179,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-	insert_bw,
-	insert_bw_out,
-	insert_bw_in,
+	insert_bw_wrapper,
+	insert_bw_wrapper_out,
+	insert_bw_wrapper_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -194,9 +194,9 @@ static GParse paneling[] = {
     insert_rootmap,
     insert_hit,
     insert_visitor,
-	insert_bw,
-	insert_bw_out,
-	insert_bw_in,
+	insert_bw_wrapper,
+	insert_bw_wrapper_out,
+	insert_bw_wrapper_in,
     insert_cumts,
     insert_maxts,
     insert_method,
@@ -209,9 +209,9 @@ static GParse paneling[] = {
     insert_rootmap,
     insert_hit,
     insert_visitor,
-	insert_bw,
-	insert_bw_out,
-	insert_bw_in,
+	insert_bw_wrapper,
+	insert_bw_wrapper_out,
+	insert_bw_wrapper_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -224,9 +224,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-	insert_bw,
-	insert_bw_out,
-	insert_bw_in,
+	insert_bw_wrapper,
+	insert_bw_wrapper_out,
+	insert_bw_wrapper_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -239,9 +239,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-	insert_bw,
-	insert_bw_out,
-	insert_bw_in,
+	insert_bw_wrapper,
+	insert_bw_wrapper_out,
+	insert_bw_wrapper_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -254,9 +254,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-	insert_bw,
-	insert_bw_out,
-	insert_bw_in,
+	insert_bw_wrapper,
+	insert_bw_wrapper_out,
+	insert_bw_wrapper_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -271,9 +271,9 @@ static GParse paneling[] = {
     insert_rootmap,
     insert_hit,
     insert_visitor,
-	insert_bw,
-	insert_bw_out,
-	insert_bw_in,
+	insert_bw_wrapper,
+	insert_bw_wrapper_out,
+	insert_bw_wrapper_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -288,9 +288,9 @@ static GParse paneling[] = {
     insert_rootmap,
     insert_hit,
     insert_visitor,
-	insert_bw,
-	insert_bw_out,
-	insert_bw_in,
+	insert_bw_wrapper,
+	insert_bw_wrapper_out,
+	insert_bw_wrapper_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -303,9 +303,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-	insert_bw,
-	insert_bw_out,
-	insert_bw_in,
+	insert_bw_wrapper,
+	insert_bw_wrapper_out,
+	insert_bw_wrapper_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -318,9 +318,9 @@ static GParse paneling[] = {
     NULL,
     insert_hit,
     insert_visitor,
-	insert_bw,
-	insert_bw_out,
-	insert_bw_in,
+	insert_bw_wrapper,
+	insert_bw_wrapper_out,
+	insert_bw_wrapper_in,
     insert_cumts,
     insert_maxts,
     NULL,
@@ -1726,32 +1726,43 @@ insert_visitor (int uniq_nkey, GModule module)
   ht_insert_meta_data (module, "visitors", 1);
 }
 
+/* A function to increases bandwidth counter from an int
+ * key. */
+static void
+insert_bw (int data_nkey, uint64_t size, GModule module, GSMetric bw_type)
+{
+  const char* t_key;
+
+  if( bw_type == MTRC_BW_OUT ) {
+	  t_key = OVERALL_BANDWIDTH_OUT;
+  } else if( bw_type == MTRC_BW_IN ) {
+	  t_key = OVERALL_BANDWIDTH_IN;
+  } else {
+	  t_key = OVERALL_BANDWIDTH;
+  }
+
+  ht_insert_bw (module, data_nkey, size, bw_type);
+  ht_insert_meta_data (module, t_key, size);
+}
+
 /* A wrapper function to increases bandwidth counter from an int
  * key. */
-static void
-insert_bw (int data_nkey, uint64_t size, GModule module)
-{
-  ht_insert_bw (module, data_nkey, size, MTRC_BW);
-  ht_insert_meta_data (module, "bytes", size);
+static void insert_bw_wrapper (int data_nkey, uint64_t size, GModule module){
+	insert_bw(data_nkey, size, module, MTRC_BW);
 }
 
-/* A wrapper function to increases outbound bandwidth counter from an int
+/* A wrapper function to increases bandwidth counter from an int
  * key. */
-static void
-insert_bw_out (int data_nkey, uint64_t size, GModule module)
-{
-  ht_insert_bw (module, data_nkey, size, MTRC_BW_OUT);
-  ht_insert_meta_data (module, "bytes", size);
+static void insert_bw_wrapper_out (int data_nkey, uint64_t size, GModule module){
+	insert_bw(data_nkey, size, module, MTRC_BW_OUT);
 }
 
-/* A wrapper function to increases inbound bandwidth counter from an int
+/* A wrapper function to increases bandwidth counter from an int
  * key. */
-static void
-insert_bw_in (int data_nkey, uint64_t size, GModule module)
-{
-  ht_insert_bw (module, data_nkey, size, MTRC_BW_IN);
-  ht_insert_meta_data (module, "bytes", size);
+static void insert_bw_wrapper_in (int data_nkey, uint64_t size, GModule module){
+	insert_bw(data_nkey, size, module, MTRC_BW_IN);
 }
+
 
 /* A wrapper call to increases cumulative time served counter
  * from an int key. */

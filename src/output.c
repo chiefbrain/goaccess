@@ -370,16 +370,20 @@ hits_visitors_plot (FILE * fp, const GHTMLPlot plot, int sp)
 
 /* Output C3.js bandwidth plot definitions. */
 static void
-hits_bw_plot (FILE * fp, const GHTMLPlot plot, int sp, int bw_type)
+hits_bw_plot (FILE * fp, const GHTMLPlot plot, int sp, GSMetric bw_type)
 {
   const char* t_label;
+  const char* t_key;
 
   if ( bw_type == MTRC_BW && conf.bandwidth ) {
-	  t_label = "Bandwidth";
+	  t_label = T_BW;
+	  t_key = OVERALL_BANDWIDTH;
   } else if ( bw_type == MTRC_BW_OUT && conf.bandwidth_out ) {
-	  t_label = "Bandwidth outbound";
+	  t_label = T_BW_OUT;
+	  t_key = OVERALL_BANDWIDTH_OUT;
   } else if (bw_type == MTRC_BW_IN && conf.bandwidth_in ) {
-	  t_label = "Bandwidth inbound";
+	  t_label = T_BW_IN;
+	  t_key = OVERALL_BANDWIDTH_IN;
   }
   else
 	  return;
@@ -387,7 +391,7 @@ hits_bw_plot (FILE * fp, const GHTMLPlot plot, int sp, int bw_type)
   /* *INDENT-OFF* */
   GChart chart[] = {
     {"y0", (GChartDef[]) {
-      {"key", "bytes"}, {"label", t_label}, {"format", "bytes"}, ChartDefStopper
+      {"key", t_key}, {"label", t_label}, {"format", "bytes"}, ChartDefStopper
     }},
   };
   /* *INDENT-ON* */
@@ -398,7 +402,7 @@ hits_bw_plot (FILE * fp, const GHTMLPlot plot, int sp, int bw_type)
     isp = sp + 1, iisp = sp + 2;
 
   fpskeysval (fp, "label", t_label, isp, 0);
-  fpskeysval (fp, "className", "bandwidth", isp, 0);
+  fpskeysval (fp, "className", t_key, isp, 0);
   fpskeysval (fp, "chartType", chart2str (plot.chart_type), isp, 0);
   fpskeyival (fp, "chartReverse", plot.chart_reverse, isp, 0);
   fpskeyival (fp, "redrawOnExpand", plot.redraw_expand, isp, 0);
@@ -649,12 +653,12 @@ print_def_overall_log_size (FILE * fp, int sp)
   };
   fpopen_obj_attr (fp, OVERALL_LOGSIZE, sp);
   print_def_metric (fp, def, sp);
-  fpclose_obj (fp, sp, 0);
+  fpclose_obj (fp, sp, 1);
 }
 
 /* Output JSON overall bandwidth definition block. */
 static void
-print_def_overall_bandwidth (FILE * fp, int sp, int bw_type)
+print_def_overall_bandwidth (FILE * fp, int sp, GSMetric bw_type)
 {
   const char* t_lbl;
   const char* t_key;
@@ -671,12 +675,13 @@ print_def_overall_bandwidth (FILE * fp, int sp, int bw_type)
   }
 
   GDefMetric def = {
-    .lbl = t_lbl,
+    .key = t_key,
+	.lbl = t_lbl,
     .vtype = "bytes",
   };
   fpopen_obj_attr (fp, t_key, sp);
   print_def_metric (fp, def, sp);
-  fpclose_obj (fp, sp, 1);
+  fpclose_obj (fp, sp, 0);
 }
 
 /* Output JSON hits definition block. */
@@ -709,23 +714,27 @@ print_def_visitors (FILE * fp, int sp)
 
 /* Output JSON bandwidth definition block. */
 static void
-print_def_bw (FILE * fp, int sp, int bw_type)
+print_def_bw (FILE * fp, int sp, GSMetric bw_type)
 {
-  const char* t_MTRC_BW_LBL;
+  const char* t_lbl;
+  const char* t_key;
 
   if ( bw_type == MTRC_BW && conf.bandwidth ) {
-	  t_MTRC_BW_LBL = MTRC_BW_LBL;
+	  t_lbl = MTRC_BW_LBL;
+	  t_key = OVERALL_BANDWIDTH;
   } else if ( bw_type == MTRC_BW_OUT && conf.bandwidth_out ) {
-	  t_MTRC_BW_LBL = MTRC_BW_OUT_LBL;
+	  t_lbl = MTRC_BW_OUT_LBL;
+	  t_key = OVERALL_BANDWIDTH_OUT;
   } else if (bw_type == MTRC_BW_IN && conf.bandwidth_in ) {
-	  t_MTRC_BW_LBL = MTRC_BW_IN_LBL;
+	  t_lbl = MTRC_BW_IN_LBL;
+	  t_key = OVERALL_BANDWIDTH_IN;
   }
   else
 	  return;
 
   GDefMetric def = {
-    .key = "bytes",
-    .lbl = t_MTRC_BW_LBL,
+    .key = t_key,
+    .lbl = t_lbl,
     .vtype = "bytes",
     .meta = "count",
     .cwidth = "12%",
@@ -1079,10 +1088,10 @@ print_def_summary (FILE * fp, int sp)
   print_def_overall_refs (fp, iisp);
   print_def_overall_notfound (fp, iisp);
   print_def_overall_static_files (fp, iisp);
-  print_def_overall_log_size (fp, iisp);
   print_def_overall_bandwidth (fp, iisp, MTRC_BW);
   print_def_overall_bandwidth (fp, iisp, MTRC_BW_OUT);
   print_def_overall_bandwidth (fp, iisp, MTRC_BW_IN);
+  print_def_overall_log_size (fp, iisp);
 
   /* close metrics block */
   fpclose_obj (fp, isp, 1);

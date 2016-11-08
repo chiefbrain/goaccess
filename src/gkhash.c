@@ -1066,7 +1066,7 @@ ht_insert_visitor (GModule module, int key, int inc)
  * On error, -1 is returned.
  * On success 0 is returned */
 int
-ht_insert_bw (GModule module, int key, uint64_t inc, int bw_type)
+ht_insert_bw (GModule module, int key, uint64_t inc, GSMetric bw_type)
 {
   khash_t (iu64) * hash = get_hash (module, bw_type);
 
@@ -1303,7 +1303,7 @@ ht_get_hits (GModule module, int key)
  * On error, or if key is not found, 0 is returned.
  * On success the uint64_t value for the given key is returned */
 uint64_t
-ht_get_bw (GModule module, int key, int bw_type)
+ht_get_bw (GModule module, int key, GSMetric bw_type)
 {
   khash_t (iu64) * hash = get_hash (module, bw_type);
 
@@ -1468,7 +1468,7 @@ ht_get_visitors_min_max (GModule module, int *min, int *max)
  * If the hash structure is empty, no values are set.
  * On success the minimum and maximum values are set. */
 void
-ht_get_bw_min_max (GModule module, uint64_t * min, uint64_t * max, int bw_type)
+ht_get_bw_min_max (GModule module, uint64_t * min, uint64_t * max, GSMetric bw_type)
 {
   khash_t (iu64) * hash = get_hash (module, bw_type);
 

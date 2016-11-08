@@ -165,9 +165,9 @@
 #define OVERALL_NOTFOUND      "unique_not_found"
 #define OVERALL_STATIC        "unique_static_files"
 #define OVERALL_LOGSIZE       "log_size"
-#define OVERALL_BANDWIDTH     "bandwidth outbound"
-#define OVERALL_BANDWIDTH_OUT "bandwidth outbound with headers"
-#define OVERALL_BANDWIDTH_IN  "bandwidth inbound with headers"
+#define OVERALL_BANDWIDTH     "bandwidth_outbound"
+#define OVERALL_BANDWIDTH_OUT "bandwidth_outbound_with_headers"
+#define OVERALL_BANDWIDTH_IN  "bandwidth_inbound_with_headers"
 #define OVERALL_LOG           "log_path"
 
 /* Metric Labels */
