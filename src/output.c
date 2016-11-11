@@ -372,21 +372,21 @@ hits_visitors_plot (FILE * fp, const GHTMLPlot plot, int sp)
 static void
 hits_bw_plot (FILE * fp, const GHTMLPlot plot, int sp, GSMetric bw_type)
 {
+  int isp = 0, iisp = 0;
   const char* t_label;
   const char* t_key;
 
   if ( bw_type == MTRC_BW && conf.bandwidth ) {
-	  t_label = T_BW;
-	  t_key = OVERALL_BANDWIDTH;
-  } else if ( bw_type == MTRC_BW_OUT && conf.bandwidth_out ) {
-	  t_label = T_BW_OUT;
-	  t_key = OVERALL_BANDWIDTH_OUT;
-  } else if (bw_type == MTRC_BW_IN && conf.bandwidth_in ) {
-	  t_label = T_BW_IN;
-	  t_key = OVERALL_BANDWIDTH_IN;
-  }
-  else
-	  return;
+	t_label = T_BW;
+	t_key = OVERALL_BANDWIDTH;
+  } else if ( bw_type == MTRC_BW_OUT	&& conf.bandwidth_out ) {
+	t_label = T_BW_OUT;
+	t_key = OVERALL_BANDWIDTH_OUT;
+  } else if ( bw_type == MTRC_BW_IN	&& conf.bandwidth_in ) {
+	t_label = T_BW_IN;
+	t_key = OVERALL_BANDWIDTH_IN;
+  } else
+    return;
 
   /* *INDENT-OFF* */
   GChart chart[] = {
@@ -396,7 +396,6 @@ hits_bw_plot (FILE * fp, const GHTMLPlot plot, int sp, GSMetric bw_type)
   };
   /* *INDENT-ON* */
 
-  int isp = 0, iisp = 0;
   /* use tabs to prettify output */
   if (conf.json_pretty_print)
     isp = sp + 1, iisp = sp + 2;
@@ -728,8 +727,7 @@ print_def_bw (FILE * fp, int sp, GSMetric bw_type)
   } else if (bw_type == MTRC_BW_IN && conf.bandwidth_in ) {
 	  t_lbl = MTRC_BW_IN_LBL;
 	  t_key = OVERALL_BANDWIDTH_IN;
-  }
-  else
+  } else
 	  return;
 
   GDefMetric def = {

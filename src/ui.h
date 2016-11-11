@@ -67,9 +67,9 @@
 #define T_UNIQUE404  "Unique 404"
 #define T_STATIC_FIL "Static Files"
 #define T_LOG        "Log Size"
-#define T_BW         "Bandwidth"
-#define T_BW_OUT     "Bandwidth outbound"
-#define T_BW_IN      "Bandwidth inbound"
+#define T_BW         "Bandwidth out"
+#define T_BW_OUT     "Bandwidth out with headers"
+#define T_BW_IN      "Bandwidth in with headers"
 #define T_LOG_PATH   "Log File"
 
 /* Spinner Label Format */
